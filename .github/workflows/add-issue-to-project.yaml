@@ -1,0 +1,81 @@
+---
+on:
+  # workflow_call:
+  workflow_dispatch:
+    inputs:
+      project-node-id:
+        required: false
+        type: string
+        default: 'PVT_kwDOCb4YHs4Avurd'
+      issue-node-id:
+        required: true
+        type: string
+
+env:
+  PROJECT_NODE_ID: ${{ inputs.project-node-id }}
+  ISSUE_NODE_ID: ${{ inputs.issue-node-id }}
+
+name: add-issue-to-project
+jobs:
+  add-issue-to-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Retrieve issue details
+        id: get-issue-details
+        run: |
+          # shellcheck disable=SC2016
+          ISSUE_URL=$(gh api graphql -f query='
+          query ($issueId: ID!) {
+            node(id: $issueId) {
+              ... on Issue {
+                url
+              }
+            }
+          }' -f issueId="${ISSUE_NODE_ID}" | jq -r '.data.node.url')
+
+          echo "issue_url=${ISSUE_URL}" >> "${GITHUB_OUTPUT}"
+      - name: Check if issue already belongs to Project
+        id: check-issue-belongs-to-project
+        run: |
+          # shellcheck disable=SC2016
+          ASSIGNED_PROJECT=$(gh api graphql -f query='
+          query ($issueId: ID!) {
+            node(id: $issueId) {
+              ... on Issue {
+                projectsV2(first: 10) {
+                  nodes {
+                    id
+                  }
+                }
+              }
+            }
+          }' -f issueId="${ISSUE_ID}" | jq -r --arg project_id "${PROJECT_NODE_ID}" '.data.node.projectsV2.nodes[].id | select(. == $project_id)')
+
+          if [[ "${ASSIGNED_PROJECT}" ==  "${PROJECT_ID}" ]]; then
+            echo "${ISSUE_URL} is already assigned to the Project. Skipping."
+            echo "already_assigned=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "already_assigned=false" >> "${GITHUB_OUTPUT}"
+          fi
+        env:
+          ISSUE_URL: ${{ steps.get-issue-details.outputs.issue_url }}
+
+      - name: Add issue to Github Project
+        if: ${{ steps.check-issue-belongs-to-project.outputs.already_assigned == 'true' }}
+        run: |
+          # shellcheck disable=SC2016
+          gh api graphql -f query='
+          mutation AddIssueToProject($projectId: ID!, $contentId: ID!) {
+            addProjectV2ItemById(input: {
+              projectId: $projectId,
+              contentId: $contentId
+            }) {
+              item {
+                id
+              }
+            }
+          }' -f projectId="${PROJECT_ID}" -f contentId="${ISSUE_ID}"
+
+          echo "✅ ${ISSUE_URL} added to project ${PROJECT_ID}." >> "${GITHUB_STEP_SUMMARY}"
+        env:
+          ISSUE_URL: ${{ steps.get-issue-details.outputs.issue_url }}
