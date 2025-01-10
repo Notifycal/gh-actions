@@ -12,11 +12,3 @@
 ### Documentation
 
 * reference actionlint action ([b929afa](https://github.com/Notifycal/gh-actions/commit/b929afae8a97705f0c1b8f2d84426edadcb992d7))
-
-## 1.0.0 (2025-01-10)
-
-
-### Features
-
-* add reusable & on PR actionlint and release-please ([#1](https://github.com/Notifycal/gh-actions/issues/1)) ([e2f0cc6](https://github.com/Notifycal/gh-actions/commit/e2f0cc680961ef5aa01b65b24bc44fa43ac12c79))
-* add reusable workflow to assign issues to the Project ([e871731](https://github.com/Notifycal/gh-actions/commit/e871731e61b6570e869af80f52b53a0993490563))
