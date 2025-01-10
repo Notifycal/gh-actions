@@ -25,3 +25,9 @@ jobs:
       NOTIFYCAL_CICD_APP_SECRET: ${{ secrets.NOTIFYCAL_CICD_APP_SECRET }}
 
 ```
+
+## actionlint.yaml
+
+This reusable action lints Github actions.
+
+Example usage: TODO
