@@ -29,7 +29,7 @@ env:
   PROJECT_NODE_ID: ${{ inputs.project-node-id }}
   ISSUE_NODE_ID: ${{ inputs.issue-node-id }}
 
-name: add-issue-to-project
+name: Add issue to Project
 jobs:
   add-issue-to-project:
     runs-on: ubuntu-latest
