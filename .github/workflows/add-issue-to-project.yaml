@@ -43,6 +43,7 @@ jobs:
       - name: Retrieve issue details
         id: get-issue-details
         run: |
+          # shellcheck disable=SC2016
           ISSUE_URL=$(gh api graphql -f query='
           query ($issueId: ID!) {
             node(id: $issueId) {
@@ -60,6 +61,7 @@ jobs:
       - name: Check if issue already belongs to Project
         id: check-issue-belongs-to-project
         run: |
+          # shellcheck disable=SC2016
           ASSIGNED_PROJECT=$(gh api graphql -f query='
           query ($issueId: ID!) {
             node(id: $issueId) {
@@ -88,6 +90,7 @@ jobs:
       - name: Add issue to Github Project
         if: steps.check-issue-belongs-to-project.outputs.already_assigned != 'true'
         run: |
+          # shellcheck disable=SC2016
           gh api graphql -f query='
           mutation AddIssueToProject($projectId: ID!, $contentId: ID!) {
             addProjectV2ItemById(input: {
