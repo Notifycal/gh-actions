@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/Notifycal/gh-actions/compare/v0.1.0...v0.2.0) (2025-01-10)
+
+
+### Features
+
+* call reusable workflow (locally) on new issue created ([97cfc85](https://github.com/Notifycal/gh-actions/commit/97cfc85e507051384bd6ba5991288e944e9188cd))
+
 ## [0.1.0](https://github.com/Notifycal/gh-actions/compare/v1.0.0...v0.1.0) (2025-01-10)
 
 
