@@ -6,7 +6,7 @@ on:
 name: Add opened issue to project
 jobs:
   add-issue-to-project:
-    uses: ./.github/workflows/add-issue-to-project.reusable.yaml
+    uses: ./.github/workflows/add-issue-to-project.reuse.yaml
     with:
       issue-node-id: ${{ github.event.issue.node_id }}
     secrets:
