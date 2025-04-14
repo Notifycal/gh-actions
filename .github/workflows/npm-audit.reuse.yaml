@@ -56,10 +56,12 @@ jobs:
       - name: Load blocks into env var
         id: load_blocks
         run: |
-          blocks=$(cat ${{ steps.audit_blocks.outputs.blocks_file }} | jq -c .)
-          echo "blocks<<EOF" >> $GITHUB_OUTPUT
-          echo "$blocks" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          blocks=$(jq -c '.' ${{ steps.audit_blocks.outputs.blocks_file }})
+          {
+            echo "blocks<<EOF"
+            echo "$blocks"
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
 
       - name: Send to Slack
         uses: slackapi/slack-github-action@v2.0.0
