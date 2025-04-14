@@ -14,7 +14,7 @@ try {
 
   if (total === 0) {
     core.info("✅ No vulnerabilities found. No Slack message generated.");
-    return;
+    process.exit(0);
   }
 
   let summary = `*Summary:* ${total} vulnerabilities found.`;
