@@ -41,14 +41,31 @@ jobs:
           cache: 'npm'
       - run: npm ci
 
-      - name: Run npm audit and post to Slack
-        id: audit
+      - name: Run npm audit
+        run: npm audit --json > audit-report.json
+      
+      - name: Generate Slack blocks
+        id: audit_blocks
+        uses: Notifycal/gh-actions/npm-audit-slack-blocks@reusable-npm-audit-action
+        with:
+          audit_file: audit-report.json
+          repository: ${{ inputs.repository }}
+          branch: ${{ inputs.ref_name }}
+          run_link: ${{ inputs.run_link }}
+
+      - name: Load blocks into env var
+        id: load_blocks
         run: |
-          ./.github/scripts/npm_audit_to_slack.sh \
-            ${{ inputs.repository }} \
-            ${{ inputs.ref_name }} \
-            ${{ inputs.run_link }} \
-            $([[ ${{ inputs.include_dev }} == 'true' ]] && echo "--include-dev")
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_CHANNEL: '#security'
+          blocks=$(cat ${{ steps.audit_blocks.outputs.blocks_file }} | jq -c .)
+          echo "blocks<<EOF" >> $GITHUB_OUTPUT
+          echo "$blocks" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Send to Slack
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: '#security'
+            blocks: ${{ steps.load_blocks.outputs.blocks }}

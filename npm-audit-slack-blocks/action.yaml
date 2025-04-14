@@ -1,0 +1,23 @@
+name: NPM Audit Slack block generator
+description: Generate Slack payload blocks from npm audit JSON
+inputs:
+  audit_file:
+    description: Path to npm audit JSON file
+    required: true
+  repository:
+    description: GitHub repo (org/repo)
+    required: true
+  branch:
+    description: Git branch name
+    required: true
+  run_link:
+    description: Link to GitHub Actions run
+    required: true
+
+outputs:
+  blocks_file:
+    description: Path to generated Slack blocks JSON
+
+runs:
+  using: node20
+  main: index.js
