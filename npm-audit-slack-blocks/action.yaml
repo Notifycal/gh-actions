@@ -25,7 +25,7 @@ runs:
   steps:
     - name: Generate Slack blocks
       run: |
-        ./${{ github.action_path }}/generate-slack-blocks.sh \
+        "${{ github.action_path }}/generate-slack-blocks.sh" \
           "${{ inputs.audit_file }}" \
           "${{ inputs.repository }}" \
           "${{ inputs.branch }}" \
