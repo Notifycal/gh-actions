@@ -42,7 +42,7 @@ jobs:
       - run: npm ci
 
       - name: Run npm audit
-        run: npm audit --json > audit-report.json
+        run: npm audit --json > audit-report.json || true
       
       - name: Generate Slack blocks
         id: audit_blocks
