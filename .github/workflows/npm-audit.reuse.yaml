@@ -68,4 +68,5 @@ jobs:
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
             channel: '#security'
+            text: 'NPM Audit Report for ${{ inputs.repository }}'
             blocks: ${{ steps.load_blocks.outputs.blocks }}
