@@ -1,0 +1,54 @@
+name: Security Monitoring
+
+on:
+  workflow_call:
+    inputs:
+      repository:
+        required: true
+        type: string
+        description: The repository to run the workflow on.
+      ref_name:
+        required: true
+        type: string
+        description: The name of the reference (branch or tag) to run the workflow on.
+      run_link:
+        required: true
+        type: string
+        description: The link to the run of the workflow.
+      include_dev:
+        required: false
+        type: boolean
+        default: false
+        description: Whether to include dev dependencies in the audit.
+    secrets:
+      SLACK_BOT_TOKEN:
+        required: true
+        description: The Slack bot token to use for sending messages.
+
+jobs:
+  npm-audit:
+    name: NPM Audit Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate .npmrc
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{secrets.GITHUB_TOKEN}}" > .npmrc
+          echo "@notifycal=https://npm.pkg.github.com/" >> .npmrc
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+
+      - name: Run npm audit and post to Slack
+        id: audit
+        run: |
+          ./.github/scripts/npm_audit_to_slack.sh \
+            ${{ inputs.repository }} \
+            ${{ inputs.ref_name }} \
+            ${{ inputs.run_link }} \
+            $([[ ${{ inputs.include_dev }} == 'true' ]] && echo "--include-dev")
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL: '#security'
