@@ -1,6 +1,27 @@
 #!/bin/bash
 set -euo pipefail
 
+generate_vuln_block() {
+  local title="$1"      # Block title
+  local raw_details="$2"
+
+  if [[ -n "$raw_details" ]]; then
+    local escaped_details
+    escaped_details=$(echo -e "$raw_details" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+
+    cat <<EOF
+,
+{
+  "type": "section",
+  "text": {
+    "type": "mrkdwn",
+    "text": "*${title}:*\\n\\n\`\`\`${escaped_details}\n\`\`\`"
+  }
+}
+EOF
+  fi
+}
+
 # Usage: ./npm_audit_to_slack.sh <repository> <branch> <run_link> [--include-dev]
 AUDIT_FILE="$1"
 REPO_NAME="$2"   # Notifycal/backend
@@ -22,20 +43,61 @@ MODERATE=$(jq '.metadata.vulnerabilities.moderate // 0' "${AUDIT_FILE}")
 LOW=$(jq '.metadata.vulnerabilities.low // 0' "${AUDIT_FILE}")
 TOTAL=$((CRITICAL + HIGH + MODERATE + LOW))
 
-# Extract vulnerability details (truncated for readability)
-DETAILS=$(jq -r '.vulnerabilities | to_entries | map("- \(.key)[\(.value.range)]: \(.value.severity)") | join("\n")' "${AUDIT_FILE}")
-DETAILS_ESCAPED=$(echo "$DETAILS" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+# Extract vulnerability details
+DEP_DETAILS=""
+DEV_DEP_DETAILS=""
 
-SUMMARY="*Summary:* ${TOTAL} vulnerabilities found."
+for pkg in $(jq -r '.vulnerabilities | keys[]' "${AUDIT_FILE}"); do
+  RANGE=$(jq -r --arg p "$pkg" '.vulnerabilities[$p].range' "${AUDIT_FILE}")
+  SEVERITY=$(jq -r --arg p "$pkg" '.vulnerabilities[$p].severity' "${AUDIT_FILE}")
+
+  if jq -e --arg p "$pkg" '.devDependencies[$p]' package.json > /dev/null; then
+    DEV_DEP_DETAILS+="- ${pkg}[${RANGE}]: ${SEVERITY}\n"
+  else
+    DEP_DETAILS+="- ${pkg}[${RANGE}]: ${SEVERITY}\n"
+  fi
+done
+
+
+SUMMARY="*Summary:* ${TOTAL} security vulnerabilities found."
 [[ "$CRITICAL" -gt 0 ]] && SUMMARY+="\\n🔥 ${CRITICAL} critical"
 [[ "$HIGH" -gt 0 ]] && SUMMARY+="\\n🚨 ${HIGH} high"
 [[ "$MODERATE" -gt 0 ]] && SUMMARY+="\\n⚠️ ${MODERATE} moderate"
 [[ "$LOW" -gt 0 ]] && SUMMARY+="\\n🟡 ${LOW} low"
 
 if [ "$TOTAL" -eq 0 ]; then
-  echo "✅ No vulnerabilities found. Exiting."
+  SUMMARY="*Summary:* No security vulnerabilities found."
+  cat <<EOF > slack-blocks.json
+[
+  {
+    "type": "header",
+    "text": {
+      "type": "plain_text",
+      "text": "🔍 Vulnerability Report - [${REPO_NAME}] - ${TOTAL} vulnerabilities found",
+      "emoji": true
+    }
+  },
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "*Repository:* <${REPO_URL}|${REPO_NAME}>\\n*Branch:* ${BRANCH}\\n*<${RUN_LINK}|Run link>*"
+    }
+  },
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "${SUMMARY}"
+    }
+  }
+]
+EOF
   exit 0;
 fi
+
+DEP_BLOCK=$(generate_vuln_block "📦 Vulnerabilities in Dependencies" "$DEP_DETAILS")
+DEV_DEP_BLOCK=$(generate_vuln_block "🔧 Vulnerabilities in Dev dependencies" "$DEV_DEP_DETAILS")
 
 # Output Slack blocks
 cat <<EOF > slack-blocks.json
@@ -44,7 +106,7 @@ cat <<EOF > slack-blocks.json
     "type": "header",
     "text": {
       "type": "plain_text",
-      "text": "🔍 NPM Audit Security Report",
+      "text": "🔍 Vulnerability Report - [${REPO_NAME}] - ${TOTAL} vulnerabilities found",
       "emoji": true
     }
   },
@@ -64,14 +126,7 @@ cat <<EOF > slack-blocks.json
   },
   {
     "type": "divider"
-  },
-  {
-    "type": "section",
-    "text": {
-      "type": "mrkdwn",
-      "text": "*Vulnerabilities:*\\n\n${DETAILS_ESCAPED}\n"
-    }
-  },
+  }${DEP_BLOCK}${DEV_DEP_BLOCK},
   {
     "type": "context",
     "elements": [
