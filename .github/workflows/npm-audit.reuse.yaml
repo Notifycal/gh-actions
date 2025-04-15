@@ -46,7 +46,7 @@ jobs:
       
       - name: Generate Slack blocks
         id: audit_blocks
-        uses: Notifycal/gh-actions/npm-audit-slack-blocks@fix-no-vulns-report
+        uses: Notifycal/gh-actions/npm-audit-slack-blocks@v0.3.2
         with:
           audit_file: audit-report.json
           repository: ${{ inputs.repository }}
