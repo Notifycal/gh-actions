@@ -1,0 +1,74 @@
+name: Security Monitoring
+
+on:
+  workflow_call:
+    inputs:
+      repository:
+        required: true
+        type: string
+        description: The repository to run the workflow on.
+      ref_name:
+        required: true
+        type: string
+        description: The name of the reference (branch or tag) to run the workflow on.
+      run_link:
+        required: true
+        type: string
+        description: The link to the run of the workflow.
+      include_dev:
+        required: false
+        type: boolean
+        default: false
+        description: Whether to include dev dependencies in the audit.
+    secrets:
+      SLACK_BOT_TOKEN:
+        required: true
+        description: The Slack bot token to use for sending messages.
+
+jobs:
+  npm-audit:
+    name: NPM Audit Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate .npmrc
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{secrets.GITHUB_TOKEN}}" > .npmrc
+          echo "@notifycal=https://npm.pkg.github.com/" >> .npmrc
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+
+      - name: Run npm audit
+        run: npm audit --json > audit-report.json || true
+      
+      - name: Generate Slack blocks
+        id: audit_blocks
+        uses: Notifycal/gh-actions/npm-audit-slack-blocks@reusable-npm-audit-action
+        with:
+          audit_file: audit-report.json
+          repository: ${{ inputs.repository }}
+          branch: ${{ inputs.ref_name }}
+          run_link: ${{ inputs.run_link }}
+
+      - name: Load blocks into env var
+        id: load_blocks
+        run: |
+          blocks=$(jq -c '.' ${{ steps.audit_blocks.outputs.blocks_file }})
+          {
+            echo "blocks<<EOF"
+            echo "$blocks"
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Send to Slack
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: '#security'
+            text: 'NPM Audit Report for ${{ inputs.repository }}'
+            blocks: ${{ steps.load_blocks.outputs.blocks }}
