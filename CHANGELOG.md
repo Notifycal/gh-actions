@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/Notifycal/gh-actions/compare/v0.3.1...v0.3.2) (2025-04-15)
+
+
+### Bug Fixes
+
+* create report for 0 vulnerabilities ([#15](https://github.com/Notifycal/gh-actions/issues/15)) ([19a789a](https://github.com/Notifycal/gh-actions/commit/19a789ae47184555edce401d07c3a8c78983943e))
+
 ## [0.3.1](https://github.com/Notifycal/gh-actions/compare/v0.3.0...v0.3.1) (2025-04-15)
 
 
