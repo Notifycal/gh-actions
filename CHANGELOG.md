@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/Notifycal/gh-actions/compare/v0.3.0...v0.3.1) (2025-04-15)
+
+
+### Bug Fixes
+
+* do not point to any version for custom action ([#12](https://github.com/Notifycal/gh-actions/issues/12)) ([3ad35a9](https://github.com/Notifycal/gh-actions/commit/3ad35a9337d4c585f837512b28be644d8ee66c4c))
+
 ## [0.3.0](https://github.com/Notifycal/gh-actions/compare/v0.2.0...v0.3.0) (2025-04-15)
 
 
