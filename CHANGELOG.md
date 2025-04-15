@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/Notifycal/gh-actions/compare/v0.2.0...v0.3.0) (2025-04-15)
+
+
+### Features
+
+* add reusable npm audit action ([#10](https://github.com/Notifycal/gh-actions/issues/10)) ([35cf584](https://github.com/Notifycal/gh-actions/commit/35cf584c038139a62613ef20205457efdceaa007))
+
 ## [0.2.0](https://github.com/Notifycal/gh-actions/compare/v0.1.0...v0.2.0) (2025-01-10)
 
 
