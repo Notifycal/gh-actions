@@ -7,7 +7,7 @@ generate_vuln_block() {
 
   if [[ -n "$raw_details" ]]; then
     local escaped_details
-    escaped_details=$(echo -e "$raw_details" | gsed 's/"/\\"/g' | gsed ':a;N;$!ba;s/\n/\\n/g')
+    escaped_details=$(echo -e "$raw_details" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
 
     cat <<EOF
 ,
@@ -57,9 +57,6 @@ for pkg in $(jq -r '.vulnerabilities | keys[]' "${AUDIT_FILE}"); do
     DEP_DETAILS+="- ${pkg}[${RANGE}]: ${SEVERITY}\n"
   fi
 done
-
-DEP_ESCAPED=$(echo "$DEP_DETAILS" | gsed 's/"/\\"/g' | gsed ':a;N;$!ba;s/\n/\\n/g')
-DEV_DEP_ESCAPED=$(echo "$DEV_DEP_DETAILS" | gsed 's/"/\\"/g' | gsed ':a;N;$!ba;s/\n/\\n/g')
 
 
 SUMMARY="*Summary:* ${TOTAL} security vulnerabilities found."
